@@ -1,8 +1,13 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+
 const mysql = require("mysql");
 const app = express();
+const cors = require('cors')
+app.use(cors())
 app.use(bodyParser.json());
+
+
 
 
 //Establish the database connection
@@ -32,13 +37,56 @@ app.listen(3000, (error)=>{
     }
 });
 
+app.get("", (req, res) => {
+  res.send({ status: true, data: "successful" });
+});
+
+
 app.get("/api/admin_tasks/roles", (req, res) => {
-    var sql = "SELECT * FROM roles";
-    db.query(sql, function (error, result) {
+  var sql = "SELECT * FROM roles";
+  db.query(sql, function (error, result) {
+    if (error) {
+      console.log("Error Connecting to DB");
+    } else {
+      res.send({ status: true, data: result });
+    }
+  });
+});
+
+app.post("/api/admin_tasks/roles/add", (req, res) => {
+    let details = {
+      role_name: req.body.roleName
+    };
+    let sql = "INSERT INTO roles SET ?";
+    db.query(sql, details, (error) => {
       if (error) {
-        console.log("Error Connecting to DB");
+        res.send({ status: false, message: "Role created Failed" });
       } else {
-        res.send({ status: true, data: result });
+        res.send({ status: true, message: "Role created successfully" });
+      }
+    });
+  });
+
+
+
+app.patch("/api/admin_tasks/roles/update/:id", (req, res) => {
+    let sql = "UPDATE roles SET role_name = '"+req.body.roleName+"' WHERE roles.id = "+req.params.id;
+    db.query(sql, (error, result) => {
+      if (error) {
+        res.send({ status: false, message: "Role Updated Failed", data: error });
+      } else {
+        res.send({ status: true, message: "Role Updated successfully", data: result });
+      }
+    });
+  });
+
+  app.patch("/api/admin_tasks/roles/status/:id", (req, res) => {
+    let sql = "UPDATE roles SET role_status = '"+req.body.roleStatus+"' WHERE roles.id = "+req.params.id;
+    db.query(sql, (error, result) => {
+      if (error) {
+        res.send({ status: false, message: "Role Updated Failed", data: error });
+      } else {
+        res.send({ status: true, message: "Role Updated successfully", data: result });
       }
     });
   });
